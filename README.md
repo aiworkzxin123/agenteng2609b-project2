@@ -27,3 +27,14 @@ Deep-link a destination with `?dest=<stop code>`, e.g. `/?dest=46211` for the JB
 ## Notes
 - The server (`server.js`) proxies and caches every upstream API (15 s for buses, 30 s for taxis, 1 min for carparks and cams, 5 min for weather). Bus stops, routes and carpark metadata are cached to `./data/`.
 - Walk and run times use straight-line distance × 1.25. Ride times assume about 19 km/h, and transfers assume an 8-minute wait. Taxi fares are rough estimates.
+
+## Artifact (snapshot) version
+
+A single-file version runs as a claude.ai Artifact: https://claude.ai/artifact/RpXU6XAQABi54WJAaHqcnF
+
+Artifacts can't call outside APIs, so `artifact/build.js` fetches live data (bus arrivals, taxis, carparks, weather, FX, and camera frames as embedded images) and builds it into `artifact/template.html`. The result is `artifact/escape-from-ct-hub.html`. Bus countdowns run from the capture time. Destination search and one-transfer routing still run inside the page, using the built-in stop and route data. Map tiles are blocked in artifacts, so the page draws its own radar instead.
+
+```
+npm start                 # the build reads taxis, carparks, weather, FX and cams from the local server
+node artifact/build.js    # writes artifact/escape-from-ct-hub.html
+```

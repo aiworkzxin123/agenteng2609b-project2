@@ -1,0 +1,882 @@
+<title>Escape from CT Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+/* Single-world design: a neon arcade cabinet. Dark on purpose, colours set explicitly. */
+:root {
+  color-scheme: dark;
+  --bg: #0b0620; --bg2: #140b33; --panel: #120a2e; --line: #3a2a7a;
+  --text: #e8e6ff; --dim: #a49bdc;
+  --pink: #ff2e88; --cyan: #00f0ff; --yellow: #ffe600; --green: #39ff14;
+  --orange: #ff9a1f; --red: #ff4b4b; --purple: #b98bff;
+  --pixel: 'Press Start 2P', 'Courier New', monospace;
+  --mono: 'VT323', 'Courier New', monospace;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { background: var(--bg); }
+body {
+  margin: 0; color: var(--text); font-family: var(--mono); font-size: 20px; line-height: 1.15;
+  background:
+    radial-gradient(1200px 600px at 80% -10%, #2a0f5a 0%, transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, #3a0a3a 0%, transparent 60%), var(--bg);
+  min-height: 100%;
+  padding-inline: 20px;
+}
+@media (max-width: 700px) { body { padding-inline: 16px; } }
+.crt { pointer-events: none; position: fixed; inset: 0; z-index: 50;
+  background: repeating-linear-gradient(to bottom, rgba(255,255,255,.035) 0 1px, transparent 1px 3px); mix-blend-mode: overlay; }
+button, input { font-family: inherit; }
+:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* header */
+.top { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; padding-block: 18px 10px; }
+.brand { min-width: 0; }
+.brand h1 { font-family: var(--pixel); font-size: clamp(18px, 3.4vw, 34px); margin: 0; letter-spacing: 2px; text-wrap: balance; }
+.brand .small { font-size: .5em; color: var(--yellow); vertical-align: middle; }
+.glow-pink { color: var(--pink); text-shadow: 0 0 6px var(--pink), 0 0 18px rgba(255,46,136,.6), 3px 3px 0 #4a0030; }
+.glow-cyan { color: var(--cyan); text-shadow: 0 0 6px var(--cyan), 0 0 18px rgba(0,240,255,.5), 3px 3px 0 #003a44; }
+.marquee { overflow: hidden; white-space: nowrap; max-width: min(640px, 100%); margin-top: 8px; color: var(--yellow); font-family: var(--pixel); font-size: 9px; letter-spacing: 1px; }
+.marquee span { display: inline-block; animation: scroll 24s linear infinite; }
+@keyframes scroll { from { transform: translateX(20%); } to { transform: translateX(-100%); } }
+.hud-top { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.loc { display: flex; flex-direction: column; }
+.lbl { font-family: var(--pixel); font-size: 8px; color: var(--dim); letter-spacing: 1px; }
+.loc b { font-size: 22px; color: var(--cyan); font-weight: normal; }
+.clock { font-family: var(--pixel); font-size: 14px; color: var(--green); text-shadow: 0 0 8px var(--green); }
+.btn { font-family: var(--pixel); font-size: 9px; color: var(--text); background: var(--bg2); border: 2px solid var(--cyan);
+  padding: 8px 10px; cursor: pointer; box-shadow: 3px 3px 0 #000; text-transform: uppercase; }
+.btn:hover { background: #1f1350; color: var(--cyan); }
+.btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #000; }
+.btn[aria-pressed="true"] { border-color: var(--green); color: var(--green); }
+.btn.tiny { padding: 6px 8px; }
+
+/* snapshot banner */
+.snap { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; border: 2px dashed var(--line); padding: 8px 12px; margin-bottom: 14px; font-size: 18px; color: var(--dim); background: rgba(0,0,0,.25); }
+.snap b { color: var(--yellow); font-weight: normal; }
+.snap.stale { border-color: var(--orange); color: var(--text); }
+.snap.stale b { color: var(--orange); }
+
+/* grid */
+.grid { display: grid; gap: 16px; padding-block: 0 20px; grid-template-columns: repeat(12, minmax(0, 1fr)); align-items: start;
+  grid-template-areas: "m m m m m m m p p p p p" "b b b b b b b s s s s s" "k k k k k j j j j j j j"; }
+.mission { grid-area: m; align-self: stretch; } .mapwrap { grid-area: p; align-self: stretch; } .bus { grid-area: b; }
+.side { grid-area: s; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.park { grid-area: k; } .johor { grid-area: j; }
+@media (max-width: 1100px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: "m m" "p p" "b b" "s s" "k k" "j j"; } }
+@media (max-width: 700px) { .grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "m" "p" "b" "s" "k" "j"; } }
+.panel { background: linear-gradient(180deg, rgba(255,255,255,.03), transparent 40%), var(--panel); border: 3px solid var(--line);
+  box-shadow: 0 0 0 3px #000, 6px 6px 0 3px #000, inset 0 0 30px rgba(120,60,255,.08); padding: 14px; min-width: 0; }
+.panel h2 { font-family: var(--pixel); font-size: 11px; margin: 0 0 12px; color: var(--yellow); letter-spacing: 1px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.panel h2 small { font-family: var(--mono); font-size: 16px; color: var(--dim); letter-spacing: 0; }
+.tag { background: var(--pink); color: #000; padding: 3px 5px; font-size: 8px; }
+.empty { color: var(--dim); padding: 10px 0; }
+
+/* mission */
+.verdict { border: 2px dashed var(--line); padding: 14px; margin-bottom: 12px; background: rgba(0,0,0,.25); }
+.verdict .big { font-family: var(--pixel); font-size: clamp(22px, 4vw, 44px); margin-bottom: 10px; color: var(--cyan); text-shadow: 0 0 10px currentColor, 4px 4px 0 #000; text-wrap: balance; }
+.big.run { color: var(--pink); } .big.walk { color: var(--yellow); } .big.chill { color: var(--green); } .big.taxi { color: var(--yellow); } .big.stay { color: var(--red); }
+.verdict .line { font-size: 24px; } .verdict .line b { color: var(--yellow); font-weight: normal; }
+.verdict .sub { font-size: 20px; color: var(--dim); margin-top: 6px; }
+.blink { animation: blink 1s steps(2, start) infinite; }
+@keyframes blink { to { visibility: hidden; } }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.stat .name { font-family: var(--pixel); font-size: 8px; color: var(--dim); margin-bottom: 4px; display: flex; justify-content: space-between; }
+.stat .meter { height: 14px; background: #000; border: 2px solid var(--line); display: flex; gap: 2px; padding: 1px; }
+.stat .meter i { flex: 1; background: #1a1240; }
+.stat .meter i.on { background: var(--c); box-shadow: 0 0 6px var(--c); }
+.stat .why { font-size: 16px; color: var(--dim); margin-top: 3px; }
+.score-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; margin-top: 12px; font-family: var(--pixel); font-size: 10px; color: var(--dim); }
+.score-row b { color: var(--yellow); font-size: 14px; margin-left: 6px; font-weight: normal; }
+
+/* radar */
+.radar { position: relative; width: 100%; max-width: 440px; aspect-ratio: 1; margin: 0 auto; border-radius: 50%; overflow: hidden;
+  background: radial-gradient(circle, #0d1a2a 0%, #060312 70%); border: 2px solid var(--line); box-shadow: 0 0 24px rgba(0,240,255,.15) inset; }
+.radar svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.sweep { position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 0deg, rgba(0,240,255,.28), rgba(0,240,255,0) 55deg, transparent 360deg); animation: spin 4s linear infinite; pointer-events: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.rtools { display: flex; flex-wrap: wrap; gap: 6px; justify-content: space-between; align-items: center; margin-top: 10px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 16px; color: var(--dim); }
+.lg { display: inline-block; width: 10px; height: 10px; margin-right: 5px; vertical-align: middle; }
+
+/* bus */
+.controls { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; margin-bottom: 10px; }
+@media (max-width: 700px) { .controls { grid-template-columns: 1fr; } }
+.controls label { font-family: var(--pixel); font-size: 9px; color: var(--dim); display: block; margin-bottom: 6px; }
+.controls label b { color: var(--cyan); font-size: 11px; font-weight: normal; }
+.search { position: relative; display: flex; gap: 6px; }
+.search input { flex: 1; min-width: 0; background: #000; color: var(--green); border: 2px solid var(--cyan); font-size: 20px; padding: 6px 8px; outline: none; }
+.search input:focus { box-shadow: 0 0 10px var(--cyan); }
+.dropdown { position: absolute; top: 100%; left: 0; right: 0; z-index: 20; list-style: none; margin: 2px 0 0; padding: 0; background: var(--bg2); border: 2px solid var(--cyan); max-height: 280px; overflow: auto; }
+.dropdown li { padding: 6px 10px; cursor: pointer; border-bottom: 1px solid var(--line); }
+.dropdown li:hover, .dropdown li.active { background: var(--pink); color: #000; }
+.dropdown li small { color: var(--dim); }
+.dropdown li:hover small, .dropdown li.active small { color: #222; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.chip { font-family: var(--pixel); font-size: 8px; background: transparent; color: var(--text); border: 2px solid var(--line); padding: 6px 8px; cursor: pointer; }
+.chip:hover { border-color: var(--pink); color: var(--pink); }
+.chip.on { border-color: var(--yellow); color: #000; background: var(--yellow); }
+.dest-now { font-size: 18px; color: var(--orange); min-height: 20px; }
+.speeds input[type=range] { width: 100%; accent-color: var(--pink); }
+.keyrow { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 16px; color: var(--dim); margin: 6px 0 12px; }
+.keyrow .btn { margin-left: auto; }
+.k { font-family: var(--pixel); font-size: 8px; padding: 4px 6px; color: #000; }
+.chill { background: var(--green); } .walk { background: var(--yellow); } .run { background: var(--pink); }
+.miss { background: #3b3360; color: #a59cd0; }
+.big.chill, .big.walk, .big.run { background: none; }
+.buslist { display: flex; flex-direction: column; gap: 12px; }
+.stopcard { border: 2px solid var(--line); background: rgba(0,0,0,.25); }
+.stophead { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; flex-wrap: wrap; padding: 8px 10px; background: #1a1045; border-bottom: 2px solid var(--line); }
+.stophead .nm { color: var(--cyan); font-size: 22px; }
+.stophead .meta { color: var(--dim); font-size: 17px; }
+.svc { display: grid; grid-template-columns: 70px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 7px 10px; border-bottom: 1px solid rgba(58,42,122,.6); }
+.svc:last-child { border-bottom: 0; }
+.svc.best { background: rgba(255,46,136,.12); box-shadow: inset 4px 0 0 var(--pink); }
+.svc .no { font-family: var(--pixel); font-size: 13px; background: #000; color: var(--yellow); border: 2px solid var(--yellow); text-align: center; padding: 6px 2px; }
+.svc .info { min-width: 0; }
+.svc .advice { font-size: 20px; } .svc .advice b { font-weight: normal; color: #fff; }
+.svc .route { font-size: 16px; color: var(--dim); overflow-wrap: anywhere; }
+.etas { display: flex; gap: 5px; }
+.eta { font-family: var(--pixel); font-size: 9px; padding: 5px; color: #000; min-width: 50px; text-align: center; }
+.eta .ld { display: block; font-family: var(--mono); font-size: 13px; margin-top: 2px; }
+.also { font-size: 16px; color: var(--dim); padding: 6px 10px; border-top: 1px dashed var(--line); }
+@media (max-width: 520px) { .svc { grid-template-columns: 56px minmax(0, 1fr); } .etas { grid-column: 1 / -1; } }
+
+/* weather */
+.umb { display: flex; gap: 14px; align-items: center; margin-bottom: 12px; }
+.umb-icon { font-size: 58px; width: 74px; flex: none; text-align: center; filter: drop-shadow(0 0 10px var(--cyan)); }
+.umb-verdict { font-family: var(--pixel); font-size: 17px; line-height: 1.4; }
+.umb-verdict.yes { color: var(--pink); } .umb-verdict.maybe { color: var(--yellow); } .umb-verdict.no { color: var(--green); }
+.umb-why { font-size: 18px; color: var(--dim); margin-top: 6px; }
+.nc-title { font-family: var(--pixel); font-size: 8px; color: var(--dim); margin-bottom: 22px; }
+.nc-title small { font-family: var(--mono); font-size: 14px; }
+.bars { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; height: 90px; align-items: end; border-bottom: 2px solid var(--line); }
+.bar { position: relative; background: var(--cyan); min-height: 3px; }
+.bar.wet { background: var(--pink); box-shadow: 0 0 8px var(--pink); }
+.bar.past { opacity: .3; }
+.bar span { position: absolute; top: -18px; left: 0; right: 0; text-align: center; font-size: 14px; color: var(--text); }
+.bar-lbls { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; font-size: 14px; color: var(--dim); text-align: center; margin-top: 3px; }
+.wx-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin-top: 12px; }
+.wx { border: 2px solid var(--line); padding: 6px 8px; background: rgba(0,0,0,.25); }
+.wx .h { font-family: var(--pixel); font-size: 7px; color: var(--dim); letter-spacing: 1px; }
+.wx .v { font-size: 26px; color: var(--cyan); }
+.wx .s { font-size: 15px; color: var(--dim); }
+
+/* taxi */
+.taxi-big { display: flex; align-items: baseline; gap: 12px; }
+.taxi-big b { font-family: var(--pixel); font-size: 40px; color: var(--yellow); text-shadow: 0 0 12px var(--yellow); font-weight: normal; }
+.taxi-big span { color: var(--dim); }
+.taxi-rows { margin-top: 10px; font-size: 19px; }
+.taxi-rows div { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--line); padding: 4px 0; gap: 8px; }
+.taxi-rows b { color: var(--yellow); font-weight: normal; text-align: right; }
+
+/* carparks */
+.parklist { display: flex; flex-direction: column; gap: 8px; }
+.cp { border: 2px solid var(--line); padding: 7px 9px; background: rgba(0,0,0,.25); }
+.cp .r1 { display: flex; justify-content: space-between; gap: 8px; }
+.cp .addr { overflow-wrap: anywhere; }
+.cp .lots { font-family: var(--pixel); font-size: 11px; white-space: nowrap; }
+.cp .r2 { font-size: 15px; color: var(--dim); }
+.cp .cbar { height: 8px; background: #000; margin: 5px 0 3px; border: 1px solid var(--line); }
+.cp .cbar i { display: block; height: 100%; }
+
+/* johor */
+.johor-top { display: flex; flex-wrap: wrap; gap: 14px; justify-content: space-between; margin-bottom: 12px; }
+.fx-rate { font-family: var(--pixel); font-size: 14px; color: var(--green); text-shadow: 0 0 8px var(--green); }
+.fx-calc { display: block; margin-top: 8px; font-size: 22px; }
+.fx-calc input { width: 90px; background: #000; color: var(--yellow); border: 2px solid var(--yellow); font-size: 22px; padding: 2px 6px; }
+.fx-calc b { color: var(--green); font-weight: normal; }
+.fx-fun { font-size: 17px; color: var(--dim); margin-top: 6px; max-width: 360px; }
+.jb-btns { display: flex; flex-direction: column; gap: 8px; }
+.cams { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.cam { border: 2px solid var(--line); background: #000; padding: 0; cursor: zoom-in; text-align: left; color: var(--text); }
+.cam img { display: block; width: 100%; max-width: 100%; aspect-ratio: 16/9; object-fit: cover; }
+.cam .cap { padding: 5px 7px; font-size: 16px; display: flex; justify-content: space-between; gap: 6px; }
+.cam .cap span:last-child { color: var(--dim); }
+.lightbox { position: fixed; inset: 0; z-index: 60; background: rgba(5,2,15,.92); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 16px; cursor: zoom-out; }
+.lightbox img { max-width: 100%; max-height: 82vh; border: 3px solid var(--cyan); }
+.lightbox div { font-family: var(--pixel); font-size: 10px; color: var(--cyan); text-align: center; }
+
+.foot { text-align: center; color: var(--dim); font-size: 15px; padding-block: 10px 30px; }
+
+@media (prefers-reduced-motion: reduce) { .blink, .marquee span, .sweep { animation: none; } }
+</style>
+
+<div class="crt"></div>
+
+<header class="top">
+  <div class="brand">
+    <h1><span class="glow-pink">ESCAPE</span> <span class="small">FROM</span> <span class="glow-cyan">CT HUB</span></h1>
+    <div class="marquee"><span>INSERT COIN ▸ CHOOSE YOUR BUS ▸ DODGE THE RAIN ▸ FIND A CAB ▸ PARK SOMEWHERE ▸ FLEE TO JOHOR ▸</span></div>
+  </div>
+  <div class="hud-top">
+    <div class="loc"><span class="lbl">PLAYER 1 @</span><b>CT HUB, KALLANG</b></div>
+    <button id="btnSfx" class="btn" aria-pressed="false" title="Toggle 8-bit sound">♪ SFX OFF</button>
+    <div class="clock tnum" id="clock">--:--:--</div>
+  </div>
+</header>
+
+<div class="snap" id="snap"></div>
+
+<main class="grid">
+  <section class="panel mission">
+    <h2><span class="tag">BRIEF</span> MISSION BRIEFING</h2>
+    <div class="verdict">
+      <div class="big" id="verdictBig">LOADING…</div>
+      <div class="line" id="verdictLine"></div>
+      <div class="sub" id="verdictSub"></div>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="score-row"><div>ESCAPE SCORE <b id="score" class="tnum">-----</b></div><div>HI-SCORE <b id="hiscore" class="tnum">-----</b></div></div>
+  </section>
+
+  <section class="panel mapwrap">
+    <h2><span class="tag">RADAR</span> AROUND CT HUB</h2>
+    <div class="radar" id="radar"><div class="sweep"></div><svg id="radarSvg" viewBox="0 0 400 400" role="img" aria-label="Radar of nearby bus stops, buses, taxis and carparks"></svg></div>
+    <div class="rtools">
+      <div class="legend">
+        <span><i class="lg" style="background:var(--pink)"></i>you</span>
+        <span><i class="lg" style="background:var(--cyan)"></i>stop</span>
+        <span><i class="lg" style="background:var(--purple)"></i>next bus</span>
+        <span><i class="lg" style="background:var(--yellow);border-radius:50%"></i>taxi</span>
+        <span><i class="lg" style="background:var(--green)"></i>carpark</span>
+        <span><i class="lg" style="background:var(--orange)"></i>destination</span>
+      </div>
+      <div class="chips" id="zoom"></div>
+    </div>
+  </section>
+
+  <section class="panel bus">
+    <h2><span class="tag">BUS</span> WHICH BUS DO I RUN FOR?</h2>
+    <div class="controls">
+      <div>
+        <label for="destInput">WHERE TO?</label>
+        <div class="search">
+          <input id="destInput" type="text" autocomplete="off" placeholder="type a stop, road or code… (blank = any bus)">
+          <button id="destClear" class="btn tiny" title="Clear destination" aria-label="Clear destination">✕</button>
+          <ul id="destList" class="dropdown" hidden></ul>
+        </div>
+        <div class="chips" id="presets"></div>
+        <div class="dest-now" id="destNow"></div>
+      </div>
+      <div class="speeds">
+        <div class="chips" id="profiles"></div>
+        <label for="walk">WALK <b id="walkVal"></b> km/h</label>
+        <input id="walk" type="range" min="2.5" max="7" step="0.1">
+        <label for="run">RUN <b id="runVal"></b> km/h</label>
+        <input id="run" type="range" min="5" max="22" step="0.5">
+      </div>
+    </div>
+    <div class="keyrow">
+      <span class="k chill">CHILL</span> plenty of time
+      <span class="k walk">WALK</span> leave soon
+      <span class="k run">RUN!</span> only if you sprint
+      <span class="k miss">MISS</span> forget it
+      <button id="btnAll" class="btn tiny">BEST STOP PER BUS</button>
+    </div>
+    <div id="busList" class="buslist"></div>
+  </section>
+
+  <div class="side">
+    <section class="panel weather">
+      <h2><span class="tag">SKY</span> UMBRELLA OR NOT?</h2>
+      <div class="umb"><div class="umb-icon" id="umbIcon">☂</div><div><div class="umb-verdict" id="umbVerdict"></div><div class="umb-why" id="umbWhy"></div></div></div>
+      <div class="nc-title">RAIN CHANCE, NEXT 2 HOURS <small>(Open-Meteo, 15-min slots)</small></div>
+      <div class="bars" id="bars"></div>
+      <div class="bar-lbls" id="barLbls"></div>
+      <div class="wx-grid" id="wxGrid"></div>
+    </section>
+    <section class="panel taxi">
+      <h2><span class="tag">CABS</span> CAB LUCK</h2>
+      <div class="taxi-big"><b id="taxi500" class="tnum">--</b><span>taxis within 500 m</span></div>
+      <div class="taxi-rows" id="taxiRows"></div>
+    </section>
+  </div>
+
+  <section class="panel park">
+    <h2><span class="tag">PARK</span> …BUT PARK WHERE?</h2>
+    <div id="parkList" class="parklist"></div>
+  </section>
+
+  <section class="panel johor">
+    <h2><span class="tag">JB</span> ESCAPE TO JOHOR</h2>
+    <div class="johor-top">
+      <div>
+        <div class="fx-rate tnum" id="fxRate"></div>
+        <label class="fx-calc" for="fxIn">S$ <input id="fxIn" type="number" min="0" value="50"> = <b id="fxOut" class="tnum"></b></label>
+        <div class="fx-fun" id="fxFun"></div>
+      </div>
+      <div class="jb-btns">
+        <button class="btn" id="goJB">▶ PLAN BUS TO JB CHECKPOINT</button>
+        <button class="btn" id="goWL">▶ PLAN BUS TO WOODLANDS CHECKPT</button>
+      </div>
+    </div>
+    <div class="cams" id="cams"></div>
+  </section>
+</main>
+
+<footer class="foot">
+  DATA: arrivelah / busrouter.sg · data.gov.sg (LTA, NEA, HDB) · Open-Meteo · Frankfurter (ECB)<br>
+  Snapshot page: countdowns are projected from the moment the data was captured. Walk/run times use straight-line distance × 1.25; ride times, transfer waits and taxi fares are estimates.
+</footer>
+
+<div class="lightbox" id="lightbox" hidden><img id="lbImg" alt=""><div id="lbCap"></div></div>
+
+<script id="snapshot" type="application/json">/*__SNAPSHOT__*/null</script>
+<script>
+(() => {
+  'use strict';
+  const S = JSON.parse(document.getElementById('snapshot').textContent);
+  const LOC = S.loc;
+  const TAKEN = new Date(S.takenAt).getTime();
+  const DETOUR = 1.25, BOARD_S = 10, TRANSFER_WAIT_MIN = 8;
+  const PRESETS = [
+    { label: 'JB CHECKPT', code: '46211' }, { label: "W'LANDS CHECKPT", code: '46101' },
+    { label: 'CHANGI T3', code: '95109' }, { label: 'ORCHARD/ION', code: '09023' },
+    { label: 'BUGIS', code: '01059' }, { label: 'MBS', code: '03509' },
+    { label: 'NUS', code: '16009' }, { label: 'JURONG EAST', code: '28009' },
+  ];
+  const PROFILES = [
+    { label: 'AUNTIE', walk: 3.5, run: 6 }, { label: 'OFFICE', walk: 4.8, run: 10 },
+    { label: 'NS MAN', walk: 5.5, run: 15 }, { label: 'BOLT', walk: 6.5, run: 22 },
+  ];
+  const LOAD = { SEA: 'seats', SDA: 'standing', LSD: 'packed' };
+  const TYPE = { SD: 'single deck', DD: 'double deck', BD: 'bendy' };
+
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem('ecth:' + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem('ecth:' + k, JSON.stringify(v)); } catch {} },
+  };
+  const state = {
+    dest: store.get('dest', null), walk: store.get('walk', 4.8), run: store.get('run', 10),
+    showAll: store.get('showAll', false), zoom: store.get('zoom', 700), sfx: false, lastBig: null, reach: {},
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+  const pad = (n) => String(n).padStart(2, '0');
+  const mmss = (s) => { s = Math.max(0, Math.round(s)); return `${Math.floor(s / 60)}:${pad(s % 60)}`; };
+  // Show all times in Singapore time, whatever the viewer's timezone.
+  const sgt = (t) => new Date(new Date(t).getTime() + 8 * 3600e3);
+  const hhmm = (t) => { const d = sgt(t); return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`; };
+  const hhmmss = (t) => { const d = sgt(t); return `${hhmm(t)}:${pad(d.getUTCSeconds())}`; };
+  function distM(lat1, lng1, lat2, lng2) {
+    const r = Math.PI / 180, dLat = (lat2 - lat1) * r, dLng = (lng2 - lng1) * r;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin(dLng / 2) ** 2;
+    return 2 * 6371000 * Math.asin(Math.sqrt(a));
+  }
+  const stopName = (code) => (S.stops[code] ? S.stops[code][2] : code);
+  const stopList = Object.entries(S.stops).map(([code, s]) => [code, s[2], s[3], s[1], s[0]]);
+
+  // ---------- 8-bit sfx (only after a click) ----------
+  let actx;
+  function beep(seq = [880, 1320]) {
+    if (!state.sfx) return;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      let t = actx.currentTime;
+      for (const f of seq) {
+        const o = actx.createOscillator(), g = actx.createGain();
+        o.type = 'square'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.06, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+        o.connect(g).connect(actx.destination); o.start(t); o.stop(t + 0.13); t += 0.13;
+      }
+    } catch {}
+  }
+  $('btnSfx').onclick = (e) => {
+    state.sfx = !state.sfx;
+    e.currentTarget.setAttribute('aria-pressed', state.sfx);
+    e.currentTarget.textContent = state.sfx ? '♪ SFX ON' : '♪ SFX OFF';
+    beep([660, 990, 1320]);
+  };
+
+  // ---------- routing (runs in the page from embedded busrouter.sg data) ----------
+  const legKm = (route, i, j) => {
+    let m = 0;
+    for (let q = i; q < j; q++) { const A = S.stops[route[q]], B = S.stops[route[q + 1]]; if (A && B) m += distM(A[1], A[0], B[1], B[0]); }
+    return (m * 1.15) / 1000;
+  };
+  const rideMin = (km) => Math.round((km / 19) * 60 + 1);
+
+  function destSetFor(code) {
+    const d = S.stops[code]; const set = new Set([code]);
+    for (const [c, s] of Object.entries(S.stops)) if (distM(d[1], d[0], s[1], s[0]) <= 300) set.add(c);
+    return set;
+  }
+  function boardingIndex(destSet) {
+    const idx = new Map();
+    for (const [no, svc] of Object.entries(S.services)) {
+      for (const route of svc.routes) {
+        const j = route.findIndex((c) => destSet.has(c));
+        if (j < 1) continue;
+        let m = 0;
+        for (let i = j - 1; i >= 0; i--) {
+          const A = S.stops[route[i]], B = S.stops[route[i + 1]];
+          if (A && B) m += distM(A[1], A[0], B[1], B[0]);
+          const km = (m * 1.15) / 1000;
+          const prev = idx.get(route[i]);
+          if (!prev || km < prev.km) idx.set(route[i], { no, stops: j - i, km, rideMin: rideMin(km), alight: route[j] });
+        }
+      }
+    }
+    return idx;
+  }
+  function directReach(svc, origin, destSet) {
+    let best = null;
+    for (const route of svc.routes) {
+      for (let i = 0; i < route.length; i++) {
+        if (route[i] !== origin) continue;
+        for (let j = i + 1; j < route.length; j++) {
+          if (!destSet.has(route[j])) continue;
+          const km = legKm(route, i, j);
+          const cand = { stops: j - i, km: +km.toFixed(1), rideMin: rideMin(km), alight: route[j] };
+          if (!best || cand.stops < best.stops) best = cand;
+          break;
+        }
+      }
+    }
+    return best;
+  }
+  function transferReach(no, svc, origin, boarding) {
+    let best = null;
+    for (const route of svc.routes) {
+      const i = route.indexOf(origin);
+      if (i < 0) continue;
+      let m = 0;
+      for (let t = i + 1; t < route.length; t++) {
+        const A = S.stops[route[t - 1]], B = S.stops[route[t]];
+        if (A && B) m += distM(A[1], A[0], B[1], B[0]);
+        const leg2 = boarding.get(route[t]);
+        if (!leg2 || leg2.no === no) continue;
+        const km1 = (m * 1.15) / 1000, ride1 = rideMin(km1);
+        const total = ride1 + TRANSFER_WAIT_MIN + leg2.rideMin;
+        if (!best || total < best.rideMin) {
+          best = { stops: t - i, km: +(km1 + leg2.km).toFixed(1), rideMin: total, alight: leg2.alight,
+            transfer: { at: route[t], stops1: t - i, no: leg2.no, stops2: leg2.stops, wait: TRANSFER_WAIT_MIN } };
+        }
+      }
+    }
+    return best;
+  }
+  // reach[stopCode|svcNo] for the current destination
+  function computeReach() {
+    state.reach = {};
+    if (!state.dest || !S.stops[state.dest]) return;
+    const destSet = destSetFor(state.dest);
+    let boarding = null;
+    for (const st of S.nearStops) for (const sv of st.services) {
+      const svc = S.services[sv.no]; if (!svc) continue;
+      let r = directReach(svc, st.code, destSet);
+      if (!r) { boarding = boarding || boardingIndex(destSet); r = transferReach(sv.no, svc, st.code, boarding); }
+      if (r) state.reach[st.code + '|' + sv.no] = r;
+    }
+  }
+
+  // ---------- judgement ----------
+  function judge(dist, secs) {
+    if (secs < -15) return null;
+    const d = dist * DETOUR;
+    if (d < 20) return secs < 240 ? { k: 'walk', leaveIn: 0, atStop: true } : { k: 'chill', leaveIn: secs - 240, atStop: true };
+    const walkT = d / (state.walk / 3.6), runT = d / (state.run / 3.6);
+    const slack = secs - walkT - BOARD_S;
+    if (slack >= 240) return { k: 'chill', leaveIn: slack };
+    if (slack >= 0) return { k: 'walk', leaveIn: slack };
+    if (secs - runT - BOARD_S / 2 >= 0) return { k: 'run', need: (d / Math.max(secs - BOARD_S / 2, 1)) * 3.6 };
+    return { k: 'miss' };
+  }
+
+  function evaluate() {
+    const now = Date.now();
+    const pool = state.dest ? S.nearStops : S.nearStops.filter((s) => s.dist <= 500).slice(0, 6);
+    let best = null;
+    const stops = pool.map((st) => {
+      let services = st.services.map((sv) => {
+        const reach = state.dest ? state.reach[st.code + '|' + sv.no] || null : null;
+        const arrs = sv.arrivals.map((a) => { const secs = (new Date(a.time).getTime() - now) / 1000; return { ...a, secs, j: judge(st.dist, secs) }; }).filter((a) => a.j);
+        const idx = arrs.findIndex((a) => a.j.k !== 'miss');
+        const catchable = idx >= 0 ? arrs[idx] : null;
+        const row = { ...sv, name: S.services[sv.no] ? S.services[sv.no].name : '', reach, arrs, catchable, skipped: idx > 0 };
+        if (state.dest && !reach) return null;
+        if (catchable) {
+          const arriveAt = now + catchable.secs * 1000 + (reach ? reach.rideMin * 60000 : 0);
+          if (!best || arriveAt < best.arriveAt) best = { stop: st, svc: row, a: catchable, arriveAt };
+        }
+        return row;
+      }).filter(Boolean);
+      if (state.dest) {
+        services.sort((a, b) => (!!a.reach.transfer - !!b.reach.transfer) || a.reach.rideMin - b.reach.rideMin);
+        const direct = services.filter((x) => !x.reach.transfer);
+        services = direct.concat(services.filter((x) => x.reach.transfer).slice(0, Math.max(0, 5 - direct.length)));
+      } else services.sort((a, b) => (parseInt(a.no) - parseInt(b.no)) || a.no.localeCompare(b.no));
+      return { ...st, services };
+    }).filter((st) => !state.dest || st.services.length);
+    const home = {};
+    for (const st of stops) for (const sv of st.services) {
+      const t = sv.catchable ? sv.catchable.secs : Infinity;
+      if (!home[sv.no] || t < home[sv.no].t) home[sv.no] = { code: st.code, t };
+    }
+    return { stops, best, home };
+  }
+
+  function adviceText(row) {
+    const c = row.catchable;
+    if (!c) return '<b>No catchable bus</b> in this snapshot';
+    const pre = row.skipped ? 'Let the first go. ' : '';
+    if (c.j.atStop) return `${pre}You're at the stop. <b>Due in ${mmss(c.secs)}</b>`;
+    if (c.j.k === 'chill') return `${pre}<b>Chill.</b> Leave in ${mmss(c.j.leaveIn)}`;
+    if (c.j.k === 'walk') return `${pre}<b>Walk now-ish.</b> Leave within ${mmss(c.j.leaveIn)}`;
+    if (c.j.need < state.walk + 1.5) return `${pre}<b>Speed-walk!</b> ~${c.j.need.toFixed(1)} km/h`;
+    return `${pre}<b>RUN!</b> Need ~${c.j.need.toFixed(0)} km/h`;
+  }
+  function routeText(sv) {
+    if (!sv.reach) return esc(sv.name || '');
+    const arriveAt = sv.catchable ? hhmm(Date.now() + sv.catchable.secs * 1000 + sv.reach.rideMin * 60000) : '?';
+    const tr = sv.reach.transfer;
+    if (tr) return `⇄ ${tr.stops1} stops, change at ${esc(stopName(tr.at))} to bus ${esc(tr.no)} (${tr.stops2} stops) · ~${sv.reach.rideMin} min incl. ~${tr.wait} min wait · arrive ~${arriveAt}`;
+    return `→ ${esc(stopName(sv.reach.alight))} · ${sv.reach.stops} stops · ${sv.reach.km} km · ~${sv.reach.rideMin} min · arrive ~${arriveAt}`;
+  }
+
+  function renderBus(ev) {
+    const el = $('busList');
+    if (!ev.stops.length) {
+      el.innerHTML = `<div class="empty">${state.dest
+        ? `No bus route (even with one transfer) to <b>${esc(stopName(state.dest))}</b> from stops within 900 m. Try a cab.`
+        : 'No bus stops within 500 m.'}</div>`;
+      return;
+    }
+    const bestKey = ev.best ? ev.best.stop.code + '|' + ev.best.svc.no : '';
+    const shown = state.showAll ? ev.stops : ev.stops
+      .map((st) => ({ ...st, hidden: st.services.filter((sv) => ev.home[sv.no].code !== st.code).length, services: st.services.filter((sv) => ev.home[sv.no].code === st.code) }))
+      .filter((st) => st.services.length || st.error);
+    el.innerHTML = shown.map((st) => {
+      const walkMin = (st.dist * DETOUR) / (state.walk / 3.6) / 60;
+      const rows = st.services.length ? st.services.map((sv) => {
+        const etas = sv.arrs.slice(0, 3).map((a) =>
+          `<span class="eta ${a.j.k} tnum" title="${esc(TYPE[a.type] || '')}${a.wab ? ', wheelchair accessible' : ''}${a.live ? '' : ', scheduled (not tracked live)'}">${a.secs <= 30 ? 'ARR' : mmss(a.secs)}<span class="ld">${esc(LOAD[a.load] || '')}${a.live ? '' : '*'}</span></span>`).join('');
+        return `<div class="svc ${bestKey === st.code + '|' + sv.no ? 'best' : ''}">
+          <div class="no">${esc(sv.no)}</div>
+          <div class="info"><div class="advice">${adviceText(sv)}</div><div class="route">${routeText(sv)}</div></div>
+          <div class="etas">${etas || '<span class="eta miss">GONE</span>'}</div></div>`;
+      }).join('') : `<div class="svc"><div></div><div class="info">${st.error ? 'Arrival data was unavailable when this snapshot was taken' : 'No services running'}</div><div></div></div>`;
+      return `<div class="stopcard">
+        <div class="stophead"><span class="nm">${esc(st.name)}</span>
+          <span class="meta">${esc(st.road)} · #${esc(st.code)} · ${st.dist} m · ${walkMin < 1 ? '<1' : walkMin.toFixed(0)} min walk</span></div>
+        ${rows}${st.hidden ? `<div class="also">+ ${st.hidden} more service${st.hidden > 1 ? 's' : ''} here, better caught at another stop</div>` : ''}</div>`;
+    }).join('');
+  }
+
+  // ---------- weather ----------
+  function umbrella() {
+    const w = S.weather || {}, why = [];
+    const fc = w.forecast ? w.forecast.text : '';
+    const fcWet = /rain|shower|thunder/i.test(fc), thunder = /thunder/i.test(fc);
+    const rainNow = (w.rain && w.rain.value > 0) || (w.current && w.current.precipitation > 0);
+    const next = (w.nowcast || []).slice(0, 5);
+    const maxProb = Math.max(0, ...next.map((x) => x.prob || 0));
+    const maxMm = Math.max(0, ...next.map((x) => x.mm || 0));
+    if (rainNow) why.push(`raining${w.rain && w.rain.value > 0 ? ` (${w.rain.value} mm in 5 min at ${w.rain.station})` : ''}`);
+    if (fc) why.push(`NEA: “${fc}” over ${w.forecast.area}`);
+    if (next.length) why.push(`${maxProb}% chance in the next hour`);
+    const uv = w.uv ? w.uv.value : 0;
+    let level = 'no';
+    if (rainNow || fcWet || maxMm >= 0.5 || (maxProb >= 70 && maxMm >= 0.2)) level = 'yes';
+    else if (maxProb >= 40 || maxMm > 0) level = 'maybe';
+    let text = { yes: 'BRING UMBRELLA', maybe: 'PACK A FOLDABLE', no: 'NO NEED LAH' }[level];
+    if (thunder) text = 'UMBRELLA + STAY OFF OPEN FIELDS';
+    if (level === 'no' && uv >= 8) { text = 'NO RAIN, BUT PARASOL LAH'; why.push(`UV ${uv} is very high`); }
+    return { level, text, why: why.join(' · '), thunder, uv, maxProb };
+  }
+  function renderWeather() {
+    const w = S.weather || {}, u = umbrella();
+    $('umbIcon').textContent = u.thunder ? '⛈' : u.level === 'yes' ? '☂' : u.level === 'maybe' ? '⛅' : u.uv >= 8 ? '⛱' : '😎';
+    $('umbVerdict').className = 'umb-verdict ' + u.level;
+    $('umbVerdict').textContent = u.text;
+    $('umbWhy').textContent = u.why;
+    const nc = w.nowcast || [];
+    $('bars').innerHTML = nc.length ? nc.map((x) => {
+      const h = x.prob != null ? x.prob : Math.min(100, x.mm * 50);
+      const past = new Date(x.time + ':00+08:00').getTime() + 15 * 60000 < Date.now();
+      return `<div class="bar ${x.mm > 0 || (x.prob || 0) >= 50 ? 'wet' : ''} ${past ? 'past' : ''}" style="height:${Math.max(3, h)}%" title="${x.time.slice(11, 16)}: ${x.prob ?? '?'}% chance, ${x.mm} mm"><span>${x.prob != null ? x.prob + '%' : ''}</span></div>`;
+    }).join('') : '<div class="empty">Rain nowcast unavailable</div>';
+    $('barLbls').innerHTML = nc.map((x, i) => `<span>${i % 2 === 0 ? x.time.slice(11, 16) : ''}</span>`).join('');
+    const pmBand = (v) => v <= 55 ? 'normal' : v <= 150 ? 'elevated' : v <= 250 ? 'high' : 'very high';
+    const uvBand = (v) => v <= 2 ? 'low' : v <= 5 ? 'moderate' : v <= 7 ? 'high' : v <= 10 ? 'very high' : 'extreme';
+    const cells = [];
+    if (w.forecast) cells.push(['2-HR FORECAST', w.forecast.text, `${w.forecast.area}${w.forecast.validTo ? ` · until ${hhmm(w.forecast.validTo)}` : ''}`]);
+    if (w.temp) cells.push(['AIR TEMP', `${w.temp.value}°C`, w.current ? `feels ${Math.round(w.current.apparent_temperature)}°C · ${w.temp.station}` : w.temp.station]);
+    if (w.rain) cells.push(['RAIN GAUGE', `${w.rain.value} mm`, `last 5 min · ${w.rain.station} (${w.rain.distKm} km)`]);
+    if (w.uv) cells.push(['UV INDEX', w.uv.value, uvBand(w.uv.value)]);
+    if (w.pm25) cells.push(['PM2.5', w.pm25.value, `${pmBand(w.pm25.value)} · ${w.pm25.region}`]);
+    if (w.current) cells.push(['HUMIDITY', `${w.current.relative_humidity_2m}%`, 'sticky index']);
+    $('wxGrid').innerHTML = cells.map(([h, v, s]) => `<div class="wx"><div class="h">${h}</div><div class="v">${esc(v)}</div><div class="s">${esc(s)}</div></div>`).join('');
+  }
+
+  // ---------- taxi ----------
+  function taxiEstimate() {
+    const t = S.taxi; if (!t) return null;
+    let wait = t.c500 >= 6 ? 2 : t.c500 >= 2 ? 4 : t.c1000 >= 3 ? 7 : 12;
+    if (umbrella().level === 'yes') wait = Math.round(wait * 1.6);
+    const s = state.dest && S.stops[state.dest];
+    if (!s) return { wait };
+    const km = (distM(LOC.lat, LOC.lng, s[1], s[0]) / 1000) * 1.35;
+    const ride = Math.round((km / (km > 6 ? 40 : 28)) * 60 + 2);
+    return { wait, ride, km, fare: 4.4 + Math.max(0, km - 1) * 0.65, arriveAt: Date.now() + (wait + ride) * 60000 };
+  }
+  function renderTaxi() {
+    const t = S.taxi; if (!t) return;
+    $('taxi500').textContent = t.c500;
+    const luck = t.c500 >= 8 ? 'JACKPOT' : t.c500 >= 3 ? 'DECENT' : t.c1000 >= 3 ? 'WALK A BIT' : 'GOOD LUCK';
+    const est = taxiEstimate();
+    const rows = [['Within 250 m', t.c250], ['Within 1 km', t.c1000], ['Island-wide', t.total], ['Cab luck', luck], ['Expected wait', `~${est.wait} min`]];
+    if (est.ride) rows.push([`To ${stopName(state.dest)}`, `~${est.ride} min · ~S$${est.fare.toFixed(0)} (est.)`]);
+    rows.push(['Counted at', hhmm(t.timestamp)]);
+    $('taxiRows').innerHTML = rows.map(([a, b]) => `<div><span>${esc(a)}</span><b class="tnum">${esc(b)}</b></div>`).join('');
+  }
+
+  // ---------- mission ----------
+  function renderMission(ev) {
+    const u = umbrella(), taxi = taxiEstimate(), b = ev.best;
+    const dest = state.dest && S.stops[state.dest];
+    let k, bigText, lineHtml;
+    const busLine = (x) => {
+      const due = x.a.secs <= 30 ? 'arriving now' : `due in ${mmss(x.a.secs)}`;
+      const how = x.a.j.atStop ? "you're already there"
+        : x.a.j.k === 'run' ? (x.a.j.need < state.walk + 1.5 ? `speed-walk at ~${x.a.j.need.toFixed(1)} km/h` : `sprint at ~${x.a.j.need.toFixed(0)} km/h`)
+        : `leave within ${mmss(x.a.j.leaveIn)}`;
+      const tr = x.svc.reach && x.svc.reach.transfer;
+      const arr = x.svc.reach ? `${tr ? `, change at ${esc(stopName(tr.at))} to bus <b>${esc(tr.no)}</b>` : ''}, reach ${esc(dest[2])} ~${hhmm(x.arriveAt)}` : '';
+      return `Bus <b>${esc(x.svc.no)}</b> from ${esc(x.stop.name)} (${x.stop.dist} m), ${due}. ${how}${arr}.`;
+    };
+    if (dest && taxi && taxi.arriveAt && (!b || taxi.arriveAt < b.arriveAt - 10 * 60000)) {
+      k = 'taxi'; bigText = 'GRAB A TAXI';
+      lineHtml = `A cab gets you to ${esc(dest[2])} around <b>${hhmm(taxi.arriveAt)}</b> (about S$${taxi.fare.toFixed(0)}, est.)` + (b ? `, vs ${hhmm(b.arriveAt)} by bus ${esc(b.svc.no)}.` : '. No bus route found.');
+    } else if (b) {
+      k = b.a.j.k;
+      bigText = { run: b.a.j.need < state.walk + 1.5 ? 'HURRY UP!' : 'RUN!!!', walk: 'WALK. NOW.', chill: 'CHILL. KOPI FIRST.' }[k];
+      lineHtml = busLine(b);
+    } else {
+      k = 'stay'; bigText = S.taxi && S.taxi.c500 ? 'TRY A TAXI' : 'GAME OVER?';
+      lineHtml = dest ? `No catchable bus to ${esc(dest[2])} in this snapshot.` : 'No catchable bus in this snapshot.';
+    }
+    const big = $('verdictBig');
+    if (big.textContent !== bigText) { big.className = 'big ' + k + (k === 'run' ? ' blink' : ''); big.textContent = bigText; }
+    if (state.lastBig !== k) { if (k === 'run') beep([988, 1319, 988, 1319]); state.lastBig = k; }
+    $('verdictLine').innerHTML = lineHtml;
+    const bits = [`☂ ${u.text.toLowerCase()}`];
+    if (S.taxi) bits.push(`${S.taxi.c500} cabs within 500 m${taxi && taxi.arriveAt && k !== 'taxi' ? `, taxi ~${hhmm(taxi.arriveAt)} for ~S$${taxi.fare.toFixed(0)}` : ''}`);
+    if (u.thunder && k === 'run') bits.push('thundery: maybe don’t sprint across the open field');
+    $('verdictSub').textContent = bits.join('   ·   ');
+
+    const w = S.weather || {}, pm = w.pm25 ? w.pm25.value : null;
+    const stats = [
+      { name: 'BUS', v: b ? clamp(1 - b.a.secs / 900) : 0, c: 'var(--pink)', why: b ? `next catchable ${mmss(b.a.secs)}` : 'none catchable' },
+      { name: 'DRY', v: u.level === 'yes' ? 0.15 : 1 - (u.maxProb || 0) / 100, c: 'var(--cyan)', why: u.text.toLowerCase() },
+      { name: 'CABS', v: S.taxi ? clamp(S.taxi.c500 / 10) : 0, c: 'var(--yellow)', why: S.taxi ? `${S.taxi.c500} within 500 m` : '–' },
+      { name: 'AIR', v: pm == null ? 0.5 : clamp(1 - (pm - 10) / 60), c: 'var(--green)', why: pm == null ? '–' : `PM2.5 ${pm} µg/m³` },
+      { name: 'SHADE', v: w.uv ? clamp(1 - w.uv.value / 11) : 0.5, c: 'var(--purple)', why: w.uv ? `UV ${w.uv.value}` : '–' },
+    ];
+    $('stats').innerHTML = stats.map((s) => {
+      const on = Math.round(s.v * 10);
+      return `<div class="stat" style="--c:${s.c}"><div class="name"><span>${s.name}</span><span>${on}/10</span></div>
+        <div class="meter">${Array.from({ length: 10 }, (_, i) => `<i class="${i < on ? 'on' : ''}"></i>`).join('')}</div><div class="why">${esc(s.why)}</div></div>`;
+    }).join('');
+    const score = Math.round((stats.reduce((a, s) => a + s.v, 0) / stats.length) * 9999) * 10;
+    const hi = Math.max(store.get('hi', 0), score); store.set('hi', hi);
+    $('score').textContent = String(score).padStart(5, '0');
+    $('hiscore').textContent = String(hi).padStart(5, '0');
+  }
+
+  // ---------- radar ----------
+  const ZOOMS = [{ r: 700, label: '700 M' }, { r: 1500, label: '1.5 KM' }];
+  function renderZoom() {
+    $('zoom').innerHTML = ZOOMS.map((z) => `<button class="chip ${state.zoom === z.r ? 'on' : ''}" data-r="${z.r}">${z.label}</button>`).join('');
+  }
+  $('zoom').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; state.zoom = +b.dataset.r; store.set('zoom', state.zoom); renderZoom(); renderRadar(); beep([440]); });
+  function renderRadar() {
+    const R = state.zoom, C = 200, RAD = 188;
+    const kx = Math.cos(LOC.lat * Math.PI / 180) * 111320, ky = 110540;
+    const proj = (lat, lng) => {
+      const dx = (lng - LOC.lng) * kx, dy = (lat - LOC.lat) * ky;
+      const d = Math.hypot(dx, dy), s = RAD / R;
+      if (d > R) return { x: C + (dx / d) * RAD, y: C - (dy / d) * RAD, out: true, d };
+      return { x: C + dx * s, y: C - dy * s, out: false, d };
+    };
+    const g = [];
+    const rings = R === 700 ? [200, 400, 700] : [500, 1000, 1500];
+    for (const r of rings) {
+      const rr = (r / R) * RAD;
+      g.push(`<circle cx="${C}" cy="${C}" r="${rr}" fill="none" stroke="#2c4a6a" stroke-width="1" stroke-dasharray="3 5"/>`);
+      g.push(`<text x="${C + 4}" y="${C - rr + 12}" fill="#6d8fb5" font-size="11" font-family="VT323, monospace">${r >= 1000 ? r / 1000 + ' km' : r + ' m'}</text>`);
+    }
+    g.push(`<line x1="${C}" y1="${C - RAD}" x2="${C}" y2="${C + RAD}" stroke="#1d3350"/><line x1="${C - RAD}" y1="${C}" x2="${C + RAD}" y2="${C}" stroke="#1d3350"/>`);
+    g.push(`<text x="${C}" y="16" fill="#6d8fb5" font-size="12" text-anchor="middle" font-family="VT323, monospace">N</text>`);
+    // taxis
+    for (const [la, ln] of S.taxi ? S.taxi.near : []) {
+      const p = proj(la, ln); if (p.out) continue;
+      g.push(`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.2" fill="#ffe600" stroke="#000" stroke-width=".8"/>`);
+    }
+    // carparks
+    for (const cp of S.carparks.slice(0, 8)) {
+      const p = proj(cp.lat, cp.lng); if (p.out) continue;
+      g.push(`<g><title>${esc(cp.address)}: ${cp.available}/${cp.total} lots</title><rect x="${p.x - 7}" y="${p.y - 7}" width="14" height="14" fill="#39ff14" stroke="#000"/><text x="${p.x}" y="${p.y + 4}" text-anchor="middle" font-size="11" font-family="Press Start 2P, monospace" fill="#000">P</text></g>`);
+    }
+    // stops
+    const pool = state.dest ? S.nearStops : S.nearStops.filter((s) => s.dist <= 500).slice(0, 6);
+    pool.forEach((st, i) => {
+      const p = proj(st.lat, st.lng); if (p.out) return;
+      const left = i % 2 === 1;
+      g.push(`<g><title>${esc(st.name)} (#${esc(st.code)}), ${st.dist} m</title><rect x="${p.x - 4}" y="${p.y - 4}" width="8" height="8" fill="#00f0ff" stroke="#000"/>
+        <text x="${left ? p.x - 7 : p.x + 7}" y="${p.y + 4}" text-anchor="${left ? 'end' : 'start'}" font-size="13" font-family="VT323, monospace" fill="#8ff8ff">${esc(st.code)}</text></g>`);
+    });
+    // next buses
+    const seen = new Set();
+    for (const st of pool) for (const sv of st.services) {
+      const a = sv.arrivals[0];
+      if (!a || !a.lat || !a.live) continue;
+      const key = sv.no + '@' + a.lat;
+      if (seen.has(key)) continue; seen.add(key);
+      const p = proj(a.lat, a.lng);
+      g.push(`<g opacity="${p.out ? 0.75 : 1}"><title>Bus ${esc(sv.no)} ${Math.round(p.d)} m away</title><rect x="${p.x - 14}" y="${p.y - 8}" width="28" height="15" fill="#b98bff" stroke="#000"/>
+        <text x="${p.x}" y="${p.y + 4}" text-anchor="middle" font-size="12" font-family="VT323, monospace" fill="#12002a">${esc(sv.no)}</text></g>`);
+    }
+    // destination bearing
+    const ds = state.dest && S.stops[state.dest];
+    if (ds) {
+      const p = proj(ds[1], ds[0]);
+      const km = (distM(LOC.lat, LOC.lng, ds[1], ds[0]) / 1000).toFixed(1);
+      const lx = Math.min(390, Math.max(10, p.x)), ly = Math.min(385, Math.max(15, p.y));
+      g.push(`<g><title>Destination: ${esc(ds[2])}</title><path d="M${C} ${C}L${p.x} ${p.y}" stroke="#ff9a1f" stroke-width="1.5" stroke-dasharray="6 4"/>
+        <circle cx="${p.x}" cy="${p.y}" r="6" fill="#ff9a1f" stroke="#000"/>
+        <text x="${lx}" y="${ly + (p.y < C ? 20 : -10)}" text-anchor="${p.x > C ? 'end' : 'start'}" font-size="14" font-family="VT323, monospace" fill="#ffb455">★ ${esc(ds[2])} ${km} km</text></g>`);
+    }
+    // you
+    g.push(`<rect x="${C - 6}" y="${C - 6}" width="12" height="12" fill="#ff2e88" stroke="#000" transform="rotate(45 ${C} ${C})"/>`);
+    g.push(`<text x="${C}" y="${C + 22}" text-anchor="middle" font-size="9" font-family="Press Start 2P, monospace" fill="#ff7ab5">YOU</text>`);
+    $('radarSvg').innerHTML = g.join('');
+  }
+
+  // ---------- destination picker ----------
+  const destInput = $('destInput'), destList = $('destList');
+  let matches = [], active = -1;
+  function search(q) {
+    const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+    if (!words.length) return [];
+    const out = stopList.filter((s) => { const hay = `${s[1]} ${s[2]} ${s[0]}`.toLowerCase(); return words.every((w) => hay.includes(w)); });
+    out.sort((a, b) => (b[1].toLowerCase().startsWith(words[0]) - a[1].toLowerCase().startsWith(words[0])) || a[1].localeCompare(b[1]));
+    return out.slice(0, 12);
+  }
+  function renderDropdown() {
+    if (!matches.length) { destList.hidden = true; return; }
+    destList.innerHTML = matches.map((s, i) => `<li data-code="${esc(s[0])}" class="${i === active ? 'active' : ''}">${esc(s[1])} <small>${esc(s[2])} · ${esc(s[0])}</small></li>`).join('');
+    destList.hidden = false;
+  }
+  destInput.addEventListener('input', () => { matches = search(destInput.value); active = -1; renderDropdown(); });
+  destInput.addEventListener('keydown', (e) => {
+    if (destList.hidden) return;
+    if (e.key === 'ArrowDown') { active = Math.min(active + 1, matches.length - 1); renderDropdown(); e.preventDefault(); }
+    else if (e.key === 'ArrowUp') { active = Math.max(active - 1, 0); renderDropdown(); e.preventDefault(); }
+    else if (e.key === 'Enter') { const s = matches[Math.max(active, 0)]; if (s) setDest(s[0]); }
+    else if (e.key === 'Escape') destList.hidden = true;
+  });
+  destList.addEventListener('mousedown', (e) => { const li = e.target.closest('li'); if (li) setDest(li.dataset.code); });
+  destInput.addEventListener('blur', () => setTimeout(() => (destList.hidden = true), 150));
+  $('destClear').onclick = () => setDest(null);
+  $('presets').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) setDest(state.dest === b.dataset.code ? null : b.dataset.code); });
+
+  function setDest(code) {
+    state.dest = code && S.stops[code] ? code : null;
+    store.set('dest', state.dest);
+    destList.hidden = true;
+    destInput.value = state.dest ? stopName(state.dest) : '';
+    computeReach(); renderDestMeta(); renderPresets(); renderTaxi(); renderRadar(); tick();
+    if (code) beep([520, 780]);
+  }
+  function renderDestMeta() {
+    const s = state.dest && S.stops[state.dest];
+    if (!s) { $('destNow').textContent = 'No destination: showing every bus nearby.'; return; }
+    const km = distM(LOC.lat, LOC.lng, s[1], s[0]) / 1000;
+    $('destNow').textContent = `▶ ${s[2]} (${s[3]}, ${state.dest}), ${km.toFixed(1)} km away. Showing direct buses, or 1-transfer routes if none go direct.`;
+  }
+  function renderPresets() {
+    $('presets').innerHTML = PRESETS.map((p) => `<button class="chip ${state.dest === p.code ? 'on' : ''}" data-code="${p.code}">${esc(p.label)}</button>`).join('');
+  }
+
+  // ---------- speeds ----------
+  function renderSpeeds() {
+    $('walk').value = state.walk; $('run').value = state.run;
+    $('walkVal').textContent = (+state.walk).toFixed(1); $('runVal').textContent = (+state.run).toFixed(1);
+    $('profiles').innerHTML = PROFILES.map((p, i) => `<button class="chip ${p.walk === +state.walk && p.run === +state.run ? 'on' : ''}" data-i="${i}">${esc(p.label)}</button>`).join('');
+  }
+  const saveSpeeds = () => { store.set('walk', state.walk); store.set('run', state.run); renderSpeeds(); tick(); };
+  $('walk').oninput = (e) => { state.walk = +e.target.value; if (state.run < state.walk + 1) state.run = state.walk + 1; saveSpeeds(); };
+  $('run').oninput = (e) => { state.run = Math.max(+e.target.value, state.walk + 1); saveSpeeds(); };
+  $('profiles').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; const p = PROFILES[+b.dataset.i]; state.walk = p.walk; state.run = p.run; saveSpeeds(); beep([520, 780]); });
+  function renderShowAll() { const b = $('btnAll'); b.setAttribute('aria-pressed', state.showAll); b.textContent = state.showAll ? 'ALL STOPS' : 'BEST STOP PER BUS'; }
+  $('btnAll').onclick = () => { state.showAll = !state.showAll; store.set('showAll', state.showAll); renderShowAll(); tick(); };
+
+  // ---------- carparks / cams / fx ----------
+  function renderParks() {
+    const list = S.carparks.slice(0, 8);
+    $('parkList').innerHTML = list.length ? list.map((p) => {
+      const pct = p.total ? p.available / p.total : 0;
+      const col = p.available === 0 ? 'var(--red)' : pct > 0.3 ? 'var(--green)' : pct > 0.1 ? 'var(--yellow)' : 'var(--orange)';
+      return `<div class="cp"><div class="r1"><span class="addr">${esc(p.address)}</span><span class="lots tnum" style="color:${col}">${p.available === 0 ? 'FULL' : p.available}/${p.total}</span></div>
+        <div class="cbar"><i style="width:${(pct * 100).toFixed(0)}%;background:${col}"></i></div>
+        <div class="r2">${p.dist} m · ${esc(p.id)} · ${esc((p.type || '').toLowerCase())}${p.height ? ` · ${p.height} m gantry` : ''}${p.free && p.free !== 'NO' ? ` · free: ${esc(p.free.toLowerCase())}` : ''}</div></div>`;
+    }).join('') : '<div class="empty">No HDB carparks within 2 km.</div>';
+  }
+  function renderCams() {
+    const cams = S.cams.filter((c) => c.img);
+    $('cams').innerHTML = cams.length ? cams.map((c, i) =>
+      `<button class="cam" data-i="${i}"><img src="${c.img}" alt="${esc(c.name)} traffic camera"><div class="cap"><span>${esc(c.name)}</span><span class="tnum">${hhmm(c.timestamp)}</span></div></button>`).join('')
+      : '<div class="empty">Checkpoint cameras were offline when this snapshot was taken.</div>';
+    $('cams').onclick = (e) => {
+      const b = e.target.closest('.cam'); if (!b) return;
+      const c = cams[+b.dataset.i];
+      $('lbImg').src = c.img; $('lbImg').alt = c.name; $('lbCap').textContent = `${c.name} · ${hhmm(c.timestamp)} SGT · click to close`;
+      $('lightbox').hidden = false;
+    };
+  }
+  $('lightbox').onclick = () => ($('lightbox').hidden = true);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('lightbox').hidden = true; });
+  function renderFx() {
+    const f = S.fx;
+    if (!f) { $('fxRate').textContent = 'FX unavailable'; return; }
+    $('fxRate').textContent = `S$1 = RM ${f.myr.toFixed(4)}`;
+    const rm = Math.max(0, +$('fxIn').value || 0) * f.myr;
+    $('fxOut').textContent = `RM ${rm.toFixed(2)}`;
+    $('fxFun').textContent = `≈ ${Math.floor(rm / 9)} bowls of JB laksa (RM 9) or ${Math.floor(rm / 2.2)} kopi-O (RM 2.20). ECB rate for ${f.date}; money changers will differ.`;
+  }
+  $('fxIn').oninput = renderFx;
+  const goJohor = (code) => { setDest(code); document.querySelector('.bus').scrollIntoView({ behavior: 'smooth' }); };
+  $('goJB').onclick = () => goJohor('46211');
+  $('goWL').onclick = () => goJohor('46101');
+
+  // ---------- snapshot banner + clock ----------
+  function renderSnap() {
+    const ageMin = Math.floor((Date.now() - TAKEN) / 60000);
+    const el = $('snap');
+    const stale = ageMin >= 10;
+    el.className = 'snap' + (stale ? ' stale' : '');
+    el.innerHTML = `<span>📼 SNAPSHOT <b class="tnum">${hhmmss(TAKEN)} SGT</b>, ${new Date(TAKEN).toLocaleDateString('en-SG', { timeZone: 'Asia/Singapore', day: 'numeric', month: 'short', year: 'numeric' })}</span>
+      <span>AGE <b class="tnum">${ageMin < 1 ? '<1' : ageMin} min</b></span>
+      <span>${stale ? 'Bus countdowns are now projections and some buses have already left. Ask Claude to republish for fresh data.' : 'Live data captured from LTA, NEA, HDB and Open-Meteo. Countdowns tick down from the capture time.'}</span>`;
+  }
+  function tick() {
+    $('clock').textContent = hhmmss(Date.now()) + ' SGT';
+    const ev = evaluate();
+    renderBus(ev); renderMission(ev);
+  }
+
+  // ---------- boot ----------
+  renderSpeeds(); renderPresets(); renderShowAll(); renderZoom();
+  if (state.dest && S.stops[state.dest]) destInput.value = stopName(state.dest); else state.dest = null;
+  computeReach(); renderDestMeta();
+  renderWeather(); renderTaxi(); renderParks(); renderCams(); renderFx(); renderRadar(); renderSnap(); tick();
+  setInterval(tick, 1000);
+  setInterval(() => { renderSnap(); renderWeather(); }, 30000);
+})();
+</script>
