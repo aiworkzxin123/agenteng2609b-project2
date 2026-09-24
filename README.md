@@ -9,7 +9,7 @@ npm start        # or: node server.js
 
 Needs Node 18+ and no `npm install`. The app has no dependencies and uses no API keys.
 
-**Hosted version:** https://aiworkzxin123.github.io/agenteng2609b-project2/ (live, via GitHub Pages) · snapshot copy at [`/snapshot/`](https://aiworkzxin123.github.io/agenteng2609b-project2/snapshot/)
+**Hosted version:** https://aiworkzxin123.github.io/kiasu-kommute/ (live, via GitHub Pages) · snapshot copy at [`/snapshot/`](https://aiworkzxin123.github.io/kiasu-kommute/snapshot/)
 
 ## What it does
 
