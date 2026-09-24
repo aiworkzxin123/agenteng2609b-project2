@@ -1,4 +1,4 @@
-// Builds a self-contained snapshot of Escape from CT Hub for publishing as a claude.ai Artifact.
+// Builds a self-contained snapshot of Kiasu Kommute for publishing as a claude.ai Artifact.
 // Artifacts cannot call external APIs, so live data is fetched here and baked into the page.
 //
 // Usage: start the local server (npm start), then: node artifact/build.js

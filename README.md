@@ -1,6 +1,6 @@
-# Escape from CT Hub 🕹️
+# Kiasu Kommute 🕹️
 
-An arcade-style, real-time dashboard for getting out of CT Hub (Kallang), or anywhere in Singapore.
+*Never miss the bus again, lah.* An arcade-style, real-time dashboard for getting out of CT Hub (Kallang), or anywhere in Singapore. It started life as "Escape from CT Hub".
 
 ```
 npm start        # or: node server.js
@@ -15,7 +15,7 @@ Needs Node 18+ and no `npm install`. The app has no dependencies and uses no API
 
 | Panel | Question it answers | Data |
 |---|---|---|
-| 01 Mission briefing | Overall verdict (RUN!!! / WALK. NOW. / CHILL / GRAB A TAXI), plus stat meters and an escape score | everything below |
+| 01 Mission briefing | Overall verdict (RUN!!! / WALK. NOW. / CHILL / GRAB A TAXI), plus stat meters and a kiasu score | everything below |
 | 02 Radar | Map of you, nearby stops, the live position of each approaching bus, taxis and carparks. Click or drag to move. | OSM tiles |
 | 03 Which bus do I run for? | Every nearby bus, judged by *your* walk and run speed: CHILL / WALK / RUN! / MISS. Pick a destination to see only buses that get there, including **1-transfer routes** when nothing goes direct. | arrivelah, busrouter.sg stops and routes |
 | 04 Umbrella or not? | Umbrella verdict from the NEA 2-hr forecast, the nearest rain gauge, and a 15-min rain nowcast; also temperature, UV, PM2.5 and humidity | data.gov.sg, Open-Meteo |

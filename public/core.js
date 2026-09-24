@@ -1,4 +1,4 @@
-// Escape from CT Hub — data logic shared by the Node server (server.js) and the
+// Kiasu Kommute — data logic shared by the Node server (server.js) and the
 // static GitHub Pages build (client-api.js). No I/O here: callers fetch, core shapes.
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();

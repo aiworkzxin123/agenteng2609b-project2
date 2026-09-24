@@ -1,4 +1,4 @@
-// Escape from CT Hub — browser-side stand-in for server.js, used on static hosting (GitHub Pages).
+// Kiasu Kommute — browser-side stand-in for server.js, used on static hosting (GitHub Pages).
 // Every upstream API sends Access-Control-Allow-Origin: *, so the page can call them directly.
 (function () {
   'use strict';

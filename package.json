@@ -1,5 +1,5 @@
 {
-  "name": "escape-from-ct-hub",
+  "name": "kiasu-kommute",
   "version": "1.0.0",
   "description": "Arcade-style dashboard: which bus to run for, umbrella or not, cab luck, HDB parking and the Johor checkpoints.",
   "main": "server.js",

@@ -1,4 +1,4 @@
-// Escape from CT Hub — zero-dependency local server.
+// Kiasu Kommute — zero-dependency local server.
 // Proxies + caches public Singapore APIs (no keys needed) and serves ./public.
 // The data shaping lives in public/core.js, shared with the static GitHub Pages build.
 const http = require('http');
@@ -61,7 +61,7 @@ async function diskCached(name, ttl, fn) {
 
 async function getJSON(url) {
   const res = await fetch(url, {
-    headers: { 'User-Agent': 'escape-from-ct-hub/1.0', Accept: 'application/json' },
+    headers: { 'User-Agent': 'kiasu-kommute/1.0', Accept: 'application/json' },
     signal: AbortSignal.timeout(15000),
     redirect: 'follow',
   });
@@ -147,7 +147,7 @@ const server = http.createServer(async (req, res) => {
 
 if (require.main === module) {
   server.listen(PORT, () => {
-    console.log(`\n  ESCAPE FROM CT HUB  >>  http://localhost:${PORT}\n`);
+    console.log(`\n  KIASU KOMMUTE  >>  http://localhost:${PORT}\n`);
     // Warm the big static datasets in the background.
     getStops().catch(() => {}); getServices().catch(() => {}); getCarparkInfo().catch(() => {});
   });

@@ -1,4 +1,4 @@
-/* Escape from CT Hub — front end. Talks only to the local server's /api/* routes. */
+/* Kiasu Kommute — front end. Talks only to the local server's /api/* routes. */
 (() => {
   'use strict';
 
