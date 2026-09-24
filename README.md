@@ -9,6 +9,8 @@ npm start        # or: node server.js
 
 Needs Node 18+ and no `npm install`. The app has no dependencies and uses no API keys.
 
+**Hosted version:** https://aiworkzxin123.github.io/agenteng2609b-project2/ (live, via GitHub Pages) · snapshot copy at [`/snapshot/`](https://aiworkzxin123.github.io/agenteng2609b-project2/snapshot/)
+
 ## What it does
 
 | Panel | Question it answers | Data |
@@ -23,6 +25,10 @@ Needs Node 18+ and no `npm install`. The app has no dependencies and uses no API
 
 Tips: pick a runner profile (🧓 Auntie → ⚡ Bolt) or tune the sliders. Toggle **SFX** for 8-bit beeps when it's time to run.
 Deep-link a destination with `?dest=<stop code>`, e.g. `/?dest=46211` for the JB Checkpoint.
+
+## GitHub Pages
+
+Every upstream API allows cross-origin requests, so the same `public/` folder also works as a static site. On `localhost` the page goes through `server.js`. On any other host it calls the APIs straight from the browser through `public/client-api.js`. Both modes share the data logic in `public/core.js`. The `.github/workflows/pages.yml` workflow deploys `public/` on every push to `main`, and puts the Artifact snapshot at `/snapshot/`.
 
 ## Notes
 - The server (`server.js`) proxies and caches every upstream API (15 s for buses, 30 s for taxis, 1 min for carparks and cams, 5 min for weather). Bus stops, routes and carpark metadata are cached to `./data/`.

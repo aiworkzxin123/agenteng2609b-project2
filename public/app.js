@@ -52,7 +52,10 @@
     const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin(dLng / 2) ** 2;
     return 2 * 6371000 * Math.asin(Math.sqrt(a));
   }
+  // On localhost the Node server proxies the APIs; anywhere else (e.g. GitHub Pages) the page calls them directly.
+  const STATIC = !['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
   async function api(path) {
+    if (STATIC) return window.EcthClientAPI(path);
     const res = await fetch(path);
     const j = await res.json();
     if (!res.ok) throw new Error(j.error || res.status);
