@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Escape from CT Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%230b0620'/><rect x='3' y='3' width='10' height='8' fill='%23ff2e88'/><rect x='4' y='12' width='2' height='2' fill='%2300f0ff'/><rect x='10' y='12' width='2' height='2' fill='%2300f0ff'/><rect x='4' y='4' width='8' height='3' fill='%2300f0ff'/></svg>">
+</head>
+<body>
+  <div class="crt"></div>
+
+  <header class="top">
+    <div class="brand">
+      <h1><span class="glow-pink">ESCAPE</span> <span class="small">FROM</span> <span class="glow-cyan">CT HUB</span></h1>
+      <div class="marquee"><span id="marquee">INSERT COIN ▸ CHOOSE YOUR BUS ▸ DODGE THE RAIN ▸ FIND A CAB ▸ PARK SOMEWHERE ▸ FLEE TO JOHOR ▸</span></div>
+    </div>
+    <div class="hud-top">
+      <div class="loc">
+        <span class="lbl">PLAYER 1 @</span>
+        <span id="locName">CT HUB, KALLANG</span>
+      </div>
+      <div class="btns">
+        <button id="btnHome" class="btn" title="Reset to CT Hub">⌂ CT HUB</button>
+        <button id="btnGps" class="btn" title="Use my GPS">◎ GPS</button>
+        <button id="btnSfx" class="btn" aria-pressed="false" title="Toggle 8-bit sound">♪ SFX OFF</button>
+      </div>
+      <div class="clock" id="clock">--:--:--</div>
+    </div>
+  </header>
+
+  <main class="grid">
+    <!-- MISSION -->
+    <section class="panel mission" id="mission">
+      <h2><span class="tag">01</span> MISSION BRIEFING</h2>
+      <div class="verdict" id="verdict">
+        <div class="big blink" id="verdictBig">LOADING…</div>
+        <div class="line" id="verdictLine">Scanning buses, clouds and cabs around you.</div>
+        <div class="line sub" id="verdictSub"></div>
+      </div>
+      <div class="stats" id="stats"></div>
+      <div class="score-row">
+        <div>ESCAPE SCORE <b id="score">---</b></div>
+        <div>HI-SCORE <b id="hiscore">---</b></div>
+      </div>
+    </section>
+
+    <!-- MAP -->
+    <section class="panel mapwrap">
+      <h2><span class="tag">02</span> RADAR <small>click map or drag ◆ to move</small></h2>
+      <div id="map"></div>
+      <div class="legend">
+        <span><i class="lg you"></i>you</span>
+        <span><i class="lg stop"></i>stop</span>
+        <span><i class="lg bus"></i>next bus</span>
+        <span><i class="lg taxi"></i>taxi</span>
+        <span><i class="lg park"></i>carpark</span>
+        <span><i class="lg dest"></i>destination</span>
+      </div>
+    </section>
+
+    <!-- BUS -->
+    <section class="panel bus">
+      <h2><span class="tag">03</span> WHICH BUS DO I RUN FOR?</h2>
+
+      <div class="controls">
+        <div class="dest">
+          <label for="destInput">WHERE TO?</label>
+          <div class="search">
+            <input id="destInput" type="text" autocomplete="off" placeholder="type a stop, road or code… (blank = any bus)">
+            <button id="destClear" class="btn tiny" title="Clear destination">✕</button>
+            <ul id="destList" class="dropdown" hidden></ul>
+          </div>
+          <div class="chips" id="presets"></div>
+          <div class="dest-now" id="destNow"></div>
+        </div>
+
+        <div class="speeds">
+          <div class="chips" id="profiles"></div>
+          <label>WALK <b id="walkVal"></b> km/h
+            <input id="walk" type="range" min="2.5" max="7" step="0.1">
+          </label>
+          <label>RUN <b id="runVal"></b> km/h
+            <input id="run" type="range" min="5" max="22" step="0.5">
+          </label>
+        </div>
+      </div>
+
+      <div class="keyrow">
+        <span class="k chill">CHILL</span> plenty of time
+        <span class="k walk">WALK</span> leave soon
+        <span class="k run">RUN!</span> only if you sprint
+        <span class="k miss">MISS</span> forget it
+        <button id="btnAll" class="btn tiny" title="Toggle showing every stop vs only the best stop for each bus">BEST STOP PER BUS</button>
+      </div>
+      <div id="busList" class="buslist"><div class="empty">Loading bus arrivals…</div></div>
+    </section>
+
+    <div class="side">
+    <!-- WEATHER -->
+    <section class="panel weather">
+      <h2><span class="tag">04</span> UMBRELLA OR NOT?</h2>
+      <div class="umb" id="umb">
+        <div class="umb-icon" id="umbIcon">☂</div>
+        <div>
+          <div class="umb-verdict" id="umbVerdict">…</div>
+          <div class="umb-why" id="umbWhy"></div>
+        </div>
+      </div>
+      <div class="nowcast">
+        <div class="nc-title">RAIN NEXT 2 HOURS <small>(Open-Meteo, 15-min slots)</small></div>
+        <div class="bars" id="bars"></div>
+      </div>
+      <div class="wx-grid" id="wxGrid"></div>
+    </section>
+
+    <!-- TAXI -->
+    <section class="panel taxi">
+      <h2><span class="tag">05</span> CAB LUCK</h2>
+      <div class="taxi-big"><b id="taxi500">--</b><span>taxis within 500 m</span></div>
+      <div class="taxi-rows" id="taxiRows"></div>
+    </section>
+
+    </div>
+
+    <!-- CARPARK -->
+    <section class="panel park">
+      <h2><span class="tag">06</span> …BUT PARK WHERE?</h2>
+      <div id="parkList" class="parklist"><div class="empty">Loading HDB carparks…</div></div>
+    </section>
+
+    <!-- JOHOR -->
+    <section class="panel johor">
+      <h2><span class="tag">07</span> ESCAPE TO JOHOR</h2>
+      <div class="johor-top">
+        <div class="fx">
+          <div class="fx-rate" id="fxRate">S$1 = RM ?</div>
+          <label class="fx-calc">S$ <input id="fxIn" type="number" min="0" value="50"> = <b id="fxOut">RM ?</b></label>
+          <div class="fx-fun" id="fxFun"></div>
+        </div>
+        <div class="jb-btns">
+          <button class="btn" id="goJB">▶ PLAN BUS TO JB CHECKPOINT</button>
+          <button class="btn" id="goWL">▶ PLAN BUS TO WOODLANDS CHECKPT</button>
+        </div>
+      </div>
+      <div class="cams" id="cams"><div class="empty">Loading checkpoint cams…</div></div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    DATA: arrivelah / busrouter.sg · data.gov.sg (LTA, NEA, HDB) · Open-Meteo · Frankfurter (ECB) · © OpenStreetMap / CARTO
+    <br>Walk/run times use straight-line distance × 1.25. Ride times and taxi fares are estimates. Don't run across the road.
+  </footer>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
